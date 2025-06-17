@@ -1,0 +1,22 @@
+# Virtual environment
+.venv/
+venv/
+env/
+
+# Python byte-code files
+*.pyc
+__pycache__/
+
+# Environment variables
+.env
+.flaskenv
+
+# Database (if using local SQLite for example)
+# If you had a local SQLite DB file (e.g., 'instance/app.db'), uncomment the next line
+# instance/
+# *.db
+
+# Other common ignores
+*.log
+.DS_Store # macOS
+Thumbs.db # Windows

@@ -1,0 +1,72 @@
+[
+    {
+      "model": "FoodCategory",
+      "records": [
+        { "name": "Breakfast", "description": "Quick and nutritious morning meals." },
+        { "name": "Lunch", "description": "Mid-day meals, often light." },
+        { "name": "Dinner", "description": "Main evening meals." },
+        { "name": "Snacks", "description": "Small bites between meals." },
+        { "name": "Desserts", "description": "Sweet dishes after meals." }
+      ]
+    },
+    {
+      "model": "User",
+      "records": [
+        { "username": "JohnDoe", "email": "john.doe@example.com", "dietary_preferences": "Vegetarian" },
+        { "username": "JaneSmith", "email": "jane.smith@example.com", "dietary_preferences": "Gluten-Free" },
+        { "username": "PeterJones", "email": "peter.jones@example.com", "dietary_preferences": null }
+      ]
+    },
+    {
+      "model": "Ingredient",
+      "records": [
+        { "name": "Flour" },
+        { "name": "Eggs" },
+        { "name": "Milk" },
+        { "name": "Sugar" },
+        { "name": "Chicken Breast" },
+        { "name": "Rice" },
+        { "name": "Broccoli" },
+        { "name": "Peanuts" },
+        { "name": "Soy Sauce" }
+      ]
+    },
+    {
+      "model": "Allergen",
+      "records": [
+        { "name": "Gluten", "description": "Found in wheat, barley, rye." },
+        { "name": "Dairy", "description": "Derived from milk." },
+        { "name": "Peanuts", "description": "Common legume allergen." },
+        { "name": "Soy", "description": "Common bean allergen." }
+      ]
+    },
+    {
+      "model": "Food",
+      "records": [
+        {
+          "name": "Oatmeal",
+          "description": "Healthy breakfast with oats.",
+          "nutritional_info": { "calories": 150, "protein": 5, "fat": 3, "carbs": 27 },
+          "category_name": "Breakfast"
+        },
+        {
+          "name": "Grilled Chicken Salad",
+          "description": "Light and protein-rich lunch.",
+          "nutritional_info": { "calories": 350, "protein": 30, "fat": 15, "carbs": 10 },
+          "category_name": "Lunch"
+        },
+        {
+          "name": "Beef Stir-fry with Rice",
+          "description": "Hearty dinner with beef and vegetables.",
+          "nutritional_info": { "calories": 500, "protein": 40, "fat": 20, "carbs": 30 },
+          "category_name": "Dinner"
+        },
+        {
+          "name": "Apple Slices",
+          "description": "Quick and healthy snack.",
+          "nutritional_info": { "calories": 95, "protein": 0.5, "fat": 0.3, "carbs": 25 },
+          "category_name": "Snacks"
+        }
+      ]
+    }
+  ]

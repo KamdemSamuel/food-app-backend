@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Food Chatbot</title>
+    <!-- Tailwind CSS CDN for easy styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Custom styles for better aesthetics and responsiveness */
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f3f4f6; /* Light gray background */
+        }
+        .chat-container {
+            max-width: 90%; /* Responsive width */
+            width: 500px; /* Max width for larger screens */
+            max-height: 80vh; /* Max height for chat area */
+            display: flex;
+            flex-direction: column;
+            border-radius: 1rem; /* Rounded corners */
+            overflow: hidden; /* Hide overflow content */
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05); /* Subtle shadow */
+            background-color: #ffffff; /* White background for the chat box */
+            margin: 20px auto; /* Center with margin */
+        }
+        .chat-messages {
+            flex-grow: 1; /* Allows messages area to expand */
+            overflow-y: auto; /* Scrollable messages */
+            padding: 1rem;
+            display: flex;
+            flex-direction: column; /* Stack messages vertically */
+        }
+        .message-bubble {
+            max-width: 80%; /* Limit bubble width */
+            padding: 0.75rem 1rem;
+            border-radius: 1rem; /* Rounded corners for bubbles */
+            margin-bottom: 0.75rem;
+            word-wrap: break-word; /* Prevent long words from breaking layout */
+        }
+        .user-message {
+            background-color: #3b82f6; /* Blue for user messages */
+            color: white;
+            align-self: flex-end; /* Align to the right */
+        }
+        .bot-message {
+            background-color: #e5e7eb; /* Light gray for bot messages */
+            color: #374151; /* Darker text for readability */
+            align-self: flex-start; /* Align to the left */
+        }
+        .chat-input-area {
+            display: flex;
+            padding: 1rem;
+            border-top: 1px solid #e5e7eb; /* Separator line */
+            background-color: #f9fafb; /* Slightly darker input area */
+        }
+        .chat-input {
+            flex-grow: 1; /* Input field takes most space */
+            border: 1px solid #d1d5db;
+            border-radius: 0.5rem;
+            padding: 0.75rem;
+            outline: none; /* Remove outline on focus */
+            transition: border-color 0.2s; /* Smooth transition */
+        }
+        .chat-input:focus {
+            border-color: #3b82f6; /* Blue border on focus */
+        }
+        .send-button {
+            background-color: #3b82f6;
+            color: white;
+            padding: 0.75rem 1.25rem;
+            border-radius: 0.5rem;
+            margin-left: 0.75rem;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            border: none; /* Remove default button border */
+        }
+        .send-button:hover {
+            background-color: #2563eb; /* Darker blue on hover */
+        }
+        /* Loader styles */
+        .loader {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3b82f6;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            animation: spin 1s linear infinite;
+            align-self: flex-start;
+            margin-bottom: 0.75rem;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body class="flex items-center justify-center min-h-screen">
+    <div class="chat-container">
+        <div class="bg-blue-600 text-white p-4 text-center text-lg font-semibold rounded-t-xl">
+            Food Chatbot
+        </div>
+        <div class="chat-messages" id="chat-messages">
+            <!-- Chat messages will be appended here -->
+            <div class="message-bubble bot-message">Hello! I'm your Food Chatbot. Ask me anything about food, recipes, nutrition, or cooking!</div>
+        </div>
+        <div class="chat-input-area">
+            <input type="text" id="user-input" class="chat-input" placeholder="Ask me something about food...">
+            <button id="send-button" class="send-button">Send</button>
+        </div>
+    </div>
+
+    <script>
+        const chatMessages = document.getElementById('chat-messages');
+        const userInput = document.getElementById('user-input');
+        const sendButton = document.getElementById('send-button');
+
+        let chatHistory = []; // Stores conversation history for context
+
+        // Function to add messages to the UI
+        function addMessageToChat(message, sender) {
+            const messageElement = document.createElement('div');
+            messageElement.classList.add('message-bubble');
+            if (sender === 'user') {
+                messageElement.classList.add('user-message');
+            } else {
+                messageElement.classList.add('bot-message');
+            }
+            messageElement.textContent = message;
+            chatMessages.appendChild(messageElement);
+            chatMessages.scrollTop = chatMessages.scrollHeight; // Scroll to bottom
+        }
+
+        // Function to show a loading indicator
+        function showLoader() {
+            const loaderElement = document.createElement('div');
+            loaderElement.classList.add('loader');
+            loaderElement.id = 'loader';
+            chatMessages.appendChild(loaderElement);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+
+        // Function to hide the loading indicator
+        function hideLoader() {
+            const loader = document.getElementById('loader');
+            if (loader) {
+                loader.remove();
+            }
+        }
+
+        async function sendMessage() {
+            const prompt = userInput.value.trim();
+            if (prompt === '') return;
+
+            addMessageToChat(prompt, 'user');
+            userInput.value = '';
+
+            showLoader();
+
+            // Add user message to chat history for sending to backend
+            chatHistory.push({ role: "user", parts: [{ text: prompt }] });
+
+            // Prepare payload for YOUR Flask backend's /api/chat endpoint
+            const payload = {
+                contents: chatHistory
+            };
+
+            // NEW: Point to your Flask backend endpoint
+            const backendChatUrl = '/api/chat'; 
+
+            try {
+                const response = await fetch(backendChatUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(payload)
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(`Backend API error: ${response.status} - ${JSON.stringify(errorData)}`);
+                }
+
+                const result = await response.json();
+
+                // Expecting the backend to return a JSON with a 'response' field
+                if (result && result.response) {
+                    const botResponse = result.response;
+                    addMessageToChat(botResponse, 'bot');
+                    // Add bot response to chat history for context in next turn
+                    chatHistory.push({ role: "model", parts: [{ text: botResponse }] });
+                } else if (result && result.error) {
+                    // Display error message from backend
+                    addMessageToChat(`Chatbot Error: ${result.error}`, 'bot');
+                    console.error("Backend returned an error:", result.error);
+                }
+                else {
+                    addMessageToChat("I'm sorry, I couldn't get a valid response from the chatbot.", 'bot');
+                    console.error("Unexpected backend response structure:", result);
+                }
+            } catch (error) {
+                console.error("Error communicating with backend chat endpoint:", error);
+                addMessageToChat("Oops! Something went wrong when trying to get a response. Please try again later.", 'bot');
+            } finally {
+                hideLoader();
+            }
+        }
+
+        // Event Listeners
+        sendButton.addEventListener('click', sendMessage);
+        userInput.addEventListener('keypress', (event) => {
+            if (event.key === 'Enter') {
+                sendMessage();
+            }
+        });
+    </script>
+</body>
+</html>
+

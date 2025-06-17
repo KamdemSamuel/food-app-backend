@@ -1,0 +1,56 @@
+# FOOD_APP/docker-compose.yml
+
+# Docker Compose file format version. '3.8' is a good, widely supported version.
+#version: '3.8'
+
+# Define the services (containers) that make up your application stack
+services:
+  # 1. Database Service (PostgreSQL)
+  db:
+    image: postgres:13-alpine # Use a specific, stable, and lightweight PostgreSQL image.
+    container_name: food_app_db_container # A readable name for your database container.
+    environment: # Environment variables used by the PostgreSQL image to configure the database.
+                 # The PostgreSQL image will automatically create a database with POSTGRES_DB.
+      POSTGRES_DB: food_app_db_docker   # <-- The database name created inside the container
+      POSTGRES_USER: samuel             # The superuser username for the database
+      POSTGRES_PASSWORD: samuelDEV     # The password for the superuser
+    volumes:
+      - db_data:/var/lib/postgresql/data # Mount a named volume for database persistence.
+                                         # This ensures your data isn't lost if the container is recreated.
+    ports:
+      - "5432:5432" # Maps host port 5432 to container port 5432.
+                    # This allows you to connect directly to the database from your host machine (e.g., with psql client).
+    healthcheck: # A crucial check for multi-container applications.
+      # Docker Compose waits for this check to pass before starting dependent services ('app').
+      test: ["CMD-SHELL", "pg_isready -U user -d food_app_db_docker"] # Checks if DB is ready to accept connections
+      interval: 5s   # Check every 5 seconds
+      timeout: 5s    # Timeout for each check
+      retries: 5     # Number of retries before marking the service as unhealthy
+
+  # 2. Application Service (Your Flask Backend)
+  app:
+    build: . # Tells Docker Compose to build the image for this service using the Dockerfile in the current directory ('.').
+    container_name: food_app_backend_container # A readable name for your application container.
+    ports:
+      - "5000:5000" # Maps host port 5000 to container port 5000.
+                    # This makes your Flask app accessible from your host machine's browser at http://localhost:5000.
+    environment: # Environment variables passed into your 'app' container.
+                 # Your Flask app (app.py) will read these using os.getenv().
+      # CRITICAL: Database connection string for your Flask application.
+      # - 'db' is the *service name* of your database container as defined above in this file.
+      # - Docker Compose sets up internal networking so 'app' can reach 'db' using its service name (not 'localhost').
+      DATABASE_URL: postgresql://samuel:samuelDEV@db:5432/food_app_db_docker
+      FLASK_APP: app.py        # Matches the ENV in your Dockerfile
+      FLASK_RUN_HOST: 0.0.0.0  # Matches the ENV in your Dockerfile
+      FLASK_DEBUG: 0           # Matches the ENV in your Dockerfile
+    depends_on: # Ensures services start in the correct order.
+      db:
+        condition: service_healthy # The 'app' container will only start after the 'db' container reports as healthy.
+    volumes:
+      - .:/app # Mount the current host directory (where your code is) to '/app' inside the container.
+                # This is INVALUABLE for development: any code changes you make on your host machine
+                # are immediately reflected in the container without needing to rebuild the image (for most changes).
+
+# Define the named volumes used by your services for persistent data storage
+volumes:
+  db_data: # This volume will store your PostgreSQL data, managed by Docker.
